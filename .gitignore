@@ -27,8 +27,10 @@ setup.sh
 ################
 map.png
 output/
-map.gif
+*.gif
+
 
 # Testing Files #
 #################
 fetch_test.py
+test.py
