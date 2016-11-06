@@ -34,3 +34,15 @@ output/
 #################
 fetch_test.py
 test.py
+
+# Secrets #
+###########
+credentials.csv
+
+# Local Pip package installs #
+##############################
+*.dist-info
+PIL/
+six/
+pg8000/
+six.py

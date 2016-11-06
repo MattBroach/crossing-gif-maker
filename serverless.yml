@@ -1,0 +1,68 @@
+service: crossing-gif
+provider:
+  name: aws
+  runtime: python2.7
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+
+package:
+  exclude:
+    - 
+
+functions:
+  hello:
+    handler: handler.hello
+
+  gifFromIntersection:
+    handler: handler.gifFromIntersection 
+    events:
+      - http:
+        path: gif/get
+        method: get
+    vpc:
+      securityGroupIds:
+        - sg-fc209b86
+      subnetIds: 
+      - subnet-97c024ab
+      - subnet-09c61340
+      - subnet-9bb1abb1
+      - subnet-31c7dc69
+
+resources:
+  Resources:
+    #Adding AWS lambda access policy.
+    AWSLambdaVPCAccessExecutionRole:
+      Type: AWS::IAM::ManagedPolicy
+      Properties:
+        Description: Creating policy for vpc connetion.
+        Roles:
+          - {"Ref" : "IamRoleLambda"}
+        PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+               - "logs:CreateLogGroup"
+               - "logs:CreateLogStream"
+               - "logs:PutLogEvents"
+               - "ec2:CreateNetworkInterface"
+               - "ec2:DescribeNetworkInterfaces"
+               - "ec2:DeleteNetworkInterface"
+              Resource: "*"

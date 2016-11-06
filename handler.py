@@ -4,18 +4,25 @@ import pg8000
 import subprocess
 import requests
 import json
+import os
 
 from map import Map
 
 
+#DATABASE_SETTINGS = {
+#    'database': 'gif_db',
+#    'user': 'postgres',
+#    'password': 'password',
+#    'host': "localhost",
+#    'port': 5432
+#}
 DATABASE_SETTINGS = {
     'database': 'gif_db',
-    'user': 'postgres',
-    'password': 'password',
-    'host': "localhost",
-    'port': 5432
-
+    'user': 'gifmaker',
+    'password': 'P=jbiL.T2Vhv6x',
+    'host': 'crossing-gif.civlb2aljpaw.us-east-1.rds.amazonaws.com'
 }
+    
 TABLE_NAME = 'intersections'
 
 
@@ -46,26 +53,26 @@ def gifFromIntersection(event, context):
 
         # Otherwise, run the gif creation process
         else:
-            #print("Fetching Map Image")
-            #m = Map(data.get('lat', 39.82), data.get('lon', -98.58))
-            #m.create()
+            print("Fetching Map Image")
+            m = Map(data.get('lat', 39.82), data.get('lon', -98.58))
+            m.create()
 
-            #output = subprocess.call([
-            #    './gifcreate.sh', 
-            #    data.get('first_name', ''), 
-            #    data.get('second_name', ''),
-            #    data.get('location', ''),
-            #    str(data.get('id', 0))
-            #])
+            output = subprocess.call([
+                './gifcreate.sh', 
+                data.get('first_name', ''), 
+                data.get('second_name', ''),
+                data.get('location', ''),
+                str(data.get('id', 0))
+            ])
 
-            #files = {'file': open("%s.gif" % data.get('id', 0), 'rb')}
+            filename = "%s.gif" % data.get('id'
+            files = {'file': open(filename, 0), 'rb')}
 
-            #r = requests.post('http://upload.giphy.com/v1/gifs', data={
-            #        'api_key': 'dc6zaTOxFJmzC',
-            #    }, files=files)
-            #print(r.content)
+            r = requests.post('http://upload.giphy.com/v1/gifs', data={
+                    'api_key': 'U0vOddn5W0Exy', 'username': 'crossing-us'
+                }, files=files)
 
-            r = MockResponse("3oz8xVxJclwQixjhXW")            
+            # r = MockResponse("3oz8xVxJclwQixjhXW")            
 
             if r.status_code == 200:
                 content = json.loads(r.content)
@@ -81,6 +88,8 @@ def gifFromIntersection(event, context):
 
                 cur.close()
                 conn.close()
+
+                os.remove(filename)
 
                 return {
                     'url': url
@@ -101,3 +110,17 @@ class MockResponse():
     def __init__(self, giphy_id):
         self.content = '{"data":{"id":"%s"},"meta":{"status":200,"msg":"OK","response_id":"581823111c42f34bfe0790d4"}}' % giphy_id
         self.status_code = 200
+        
+def hello(event, context):
+    body = {
+        "message": "Go Serverless v1.0! Your function executed successfully!",
+        "input": event
+    }
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(body)
+    }
+
+    return response
+
