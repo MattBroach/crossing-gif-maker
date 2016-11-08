@@ -2,67 +2,38 @@ service: crossing-gif
 provider:
   name: aws
   runtime: python2.7
-
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
+  region: us-east-1
+  iamRoleARN: arn:aws:iam::069571769196:role/intersections-dev-IamRoleLambda-1MAAQQH68Y4YK
+  cfLogs: true
+  vpc:
+      securityGroupIds:
+        - sg-86ee31fb
+      subnetIds: 
+        - subnet-06f9595d
 
 package:
   exclude:
-    - 
+    - credentials.csv
+    - fetch_test.py
+    - test.py
+    - pg8000-1.10.6.dist-info/**
+    - Pillow-3.4.2.dist-info/**
+    - six-1.10.0.dist-info/**
+    - requests-2.11.1.dist-info/**
+    - setup.sh
+    - ubuntu-xenial-16.04-cloudimg-console
+    - Vagrantfile
+    - .vagrant/**
+    - .git/**
+    - .gitignore
+    - .DS_Store
 
 functions:
-  hello:
-    handler: handler.hello
-
   gifFromIntersection:
     handler: handler.gifFromIntersection 
+    timeout: 30
     events:
       - http:
-        path: gif/get
-        method: get
-    vpc:
-      securityGroupIds:
-        - sg-fc209b86
-      subnetIds: 
-      - subnet-97c024ab
-      - subnet-09c61340
-      - subnet-9bb1abb1
-      - subnet-31c7dc69
-
-resources:
-  Resources:
-    #Adding AWS lambda access policy.
-    AWSLambdaVPCAccessExecutionRole:
-      Type: AWS::IAM::ManagedPolicy
-      Properties:
-        Description: Creating policy for vpc connetion.
-        Roles:
-          - {"Ref" : "IamRoleLambda"}
-        PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-               - "logs:CreateLogGroup"
-               - "logs:CreateLogStream"
-               - "logs:PutLogEvents"
-               - "ec2:CreateNetworkInterface"
-               - "ec2:DescribeNetworkInterfaces"
-               - "ec2:DeleteNetworkInterface"
-              Resource: "*"
+          path: gif/get
+          method: get
+    memorySize: 512

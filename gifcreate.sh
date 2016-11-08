@@ -1,8 +1,9 @@
 #!/bin/bash
 
-OUTPUT_FOLDER='output'
-SOURCE_FOLDER='PNG'
-MAP_IMAGE='map.png'
+BASE_FOLDER=/tmp
+OUTPUT_FOLDER=$BASE_FOLDER/output
+SOURCE_FOLDER=PNG
+MAP_IMAGE=$BASE_FOLDER/map.png
 
 FIRST_NAME=$1
 SECOND_NAME=$2
@@ -13,9 +14,9 @@ ATTRIBUTION="Map data © OpenStreetMap (CC BY-SA)"
 # CREATE INITIAL TEXT
 echo "Creating Text Overlays"
 
-convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$FIRST_NAME" first_name.png
-convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$SECOND_NAME" second_name.png
-convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center label:"$LOCATION" location.png
+convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$FIRST_NAME" $BASE_FOLDER/first_name.png
+convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$SECOND_NAME" $BASE_FOLDER/second_name.png
+convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center label:"$LOCATION" $BASE_FOLDER/location.png
 
 mkdir -p $OUTPUT_FOLDER
 
@@ -29,8 +30,8 @@ composite_with_offset () {
     SOURCE_FILE=$SOURCE_FOLDER/GIF_$(printf %02d $INDEX).png
     OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $INDEX).png
 
-    convert -page 0 $MAP_IMAGE -page 0 $SOURCE_FILE -page $FIRST_OFFSET+33 first_name.png \
-            -page +$SECOND_OFFSET+33 second_name.png -page +70+$LOCATION_OFFSET location.png \
+    convert -page 0 $MAP_IMAGE -page 0 $SOURCE_FILE -page $FIRST_OFFSET+33 $BASE_FOLDER/first_name.png \
+            -page +$SECOND_OFFSET+33 $BASE_FOLDER/second_name.png -page +70+$LOCATION_OFFSET $BASE_FOLDER/location.png \
             -fill black -pointsize 10 -annotate +435+$ATTRIBUTION_OFFSET "$ATTRIBUTION" \
             -layers flatten $OUTPUT_FILE
 }
@@ -89,14 +90,14 @@ done
 
 # CREATE GIF
 echo "Making Gif"
-convert -delay 83x1000 -size 640x480 "${GIF_PARAMS[@]/#/}" -loop 0 temp.gif
-convert temp.gif +dither -layers Optimize -colors 32 $ID.gif
+convert -delay 83x1000 -size 640x480 "${GIF_PARAMS[@]/#/}" -loop 0 $BASE_FOLDER/temp.gif
+convert $BASE_FOLDER/temp.gif +dither -layers Optimize -colors 32 $BASE_FOLDER/$ID.gif
 
 # CLEAN UP TEMP FILES
 echo "Cleaning"
-rm first_name.png
-rm second_name.png
-rm location.png
+rm $BASE_FOLDER/first_name.png
+rm $BASE_FOLDER/second_name.png
+rm $BASE_FOLDER/location.png
 rm $OUTPUT_FOLDER/*.png
-rm temp.gif
-rm map.png
+rm $BASE_FOLDER/temp.gif
+rm $BASE_FOLDER/map.png

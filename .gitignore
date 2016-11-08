@@ -29,7 +29,6 @@ map.png
 output/
 *.gif
 
-
 # Testing Files #
 #################
 fetch_test.py
@@ -46,3 +45,8 @@ PIL/
 six/
 pg8000/
 six.py
+requests/
+
+# Serverless files #
+####################
+.serverless/

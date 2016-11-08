@@ -69,8 +69,7 @@ class Map(object):
         x, y = self._absolute_x_y()
         return int(x), int(y)
 
-    def create(self, filename='map.png'):
-
+    def create(self, filename='/tmp/map.png'):
         tiles_x = int(math.ceil(self.width / self.tile_width)) + 2
         tiles_y = int(math.ceil(self.height / self.tile_height)) + 3
 
@@ -93,6 +92,7 @@ class Map(object):
 
         image_width = tiles_x * self.tile_width
         image_height = tiles_y * self.tile_height
+
 
         image = Image.new('RGBA', (image_width, image_height), (0,0,0,0))
         blank_image = Image.new('RGBA', (image_width, image_height), (0,0,0,0))
