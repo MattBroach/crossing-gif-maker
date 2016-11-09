@@ -48,8 +48,12 @@ def gifFromIntersection(event, context):
             cur.close()
             conn.close()
 
+            print(resp)
+
             return {
-                'giphy_id': resp[0]
+                'statusCode': 200,
+                'body': json.dumps({'giphy_id': resp[0]}),
+                'headers':{}
             }
 
         # Otherwise, run the gif creation process
@@ -93,7 +97,9 @@ def gifFromIntersection(event, context):
                 os.remove(filename)
 
                 return {
-                    'url': url
+                    'statusCode': 200,
+                    'body': json.dumps({'giphy_id': giphy_id}),
+                    'headers':{}
                 }
 
             else:

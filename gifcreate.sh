@@ -1,8 +1,9 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BASE_FOLDER=/tmp
 OUTPUT_FOLDER=$BASE_FOLDER/output
-SOURCE_FOLDER=PNG
+SOURCE_FOLDER=$DIR/PNG
 MAP_IMAGE=$BASE_FOLDER/map.png
 
 FIRST_NAME=$1
@@ -14,9 +15,9 @@ ATTRIBUTION="Map data © OpenStreetMap (CC BY-SA)"
 # CREATE INITIAL TEXT
 echo "Creating Text Overlays"
 
-convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$FIRST_NAME" $BASE_FOLDER/first_name.png
-convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center label:"$SECOND_NAME" $BASE_FOLDER/second_name.png
-convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center label:"$LOCATION" $BASE_FOLDER/location.png
+convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$FIRST_NAME" $BASE_FOLDER/first_name.png
+convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$SECOND_NAME" $BASE_FOLDER/second_name.png
+convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center caption:"$LOCATION" $BASE_FOLDER/location.png
 
 mkdir -p $OUTPUT_FOLDER
 
@@ -27,7 +28,7 @@ composite_with_offset () {
     ATTRIBUTION_OFFSET=$4
     INDEX=$5
 
-    SOURCE_FILE=$SOURCE_FOLDER/GIF_$(printf %02d $INDEX).png
+    SOURCE_FILE=$SOURCE_FOLDER/Gif_$(printf %02d $INDEX).png
     OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $INDEX).png
 
     convert -page 0 $MAP_IMAGE -page 0 $SOURCE_FILE -page $FIRST_OFFSET+33 $BASE_FOLDER/first_name.png \
@@ -41,7 +42,7 @@ composite_with_offset () {
 echo "Compositing Intermediaries"
 GIF_PARAMS=()
 for i in {0..71}; do
-    SOURCE_FILE=$SOURCE_FOLDER/GIF_$(printf %02d $i).png
+    SOURCE_FILE=$SOURCE_FOLDER/Gif_$(printf %02d $i).png
     OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $i).png
 
     # Before text enters, we only need to combine the animation and the map

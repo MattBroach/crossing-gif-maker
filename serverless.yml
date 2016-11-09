@@ -31,9 +31,9 @@ package:
 functions:
   gifFromIntersection:
     handler: handler.gifFromIntersection 
-    timeout: 30
+    timeout: 300
     events:
       - http:
           path: gif/get
           method: get
-    memorySize: 512
+    memorySize: 1536
