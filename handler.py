@@ -27,7 +27,64 @@ TABLE_NAME = 'giphy'
 
 WRITE_DIR='/tmp'
 
-def gifFromIntersection(event, context):
+def makeIntersectionGif(event, context):
+    data = event.get('queryStringParameters', {})
+
+    m = Map(float(data.get('lat', 39.82)), float(data.get('lon', -98.58)))
+    m.create()
+
+    output = subprocess.call([
+        './gifcreate.sh', 
+        data.get('nm1', ''), 
+        data.get('nm2', ''),
+        data.get('loc', ''),
+        str(data.get('id', 0))
+    ])
+
+    filename = "%s/%s.gif" % (WRITE_DIR, data.get('id', 0))
+    files = {'file': open(filename, 'rb')}
+
+    r = requests.post('http://upload.giphy.com/v1/gifs', data={
+            'api_key': 'U0vOddn5W0Exy', 'username': 'crossing-us'
+        }, files=files)
+
+    # r = MockResponse("3oz8xVxJclwQixjhXW")            
+
+    if r.status_code == 200:
+        content = json.loads(r.content)
+        url = make_giphy_url(content['data']['id'])
+        giphy_id = os.path.basename(url)
+
+        conn = pg8000.connect(**DATABASE_SETTINGS)
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO """ + TABLE_NAME + """
+            VALUES (%s, %s);
+            """, [data.get('id'), giphy_id]
+        )
+        conn.commit()
+
+        cur.close()
+        conn.close()
+
+        os.remove(filename)
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'giphy_id': giphy_id}),
+            'headers':{}
+        }
+
+    else:
+        cur.close()
+        conn.close()
+
+        r.raise_for_status()
+
+
+def getIntersectionGif(event, context):
     data = event.get('queryStringParameters', {})
 
     conn = pg8000.connect(**DATABASE_SETTINGS)
@@ -53,64 +110,31 @@ def gifFromIntersection(event, context):
             return {
                 'statusCode': 200,
                 'body': json.dumps({'giphy_id': resp[0]}),
-                'headers':{}
+                'headers':{
+                    'X-Requested-With': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
+                }
             }
 
-        # Otherwise, run the gif creation process
+        # Otherwise, return an error
         else:
-            m = Map(float(data.get('lat', 39.82)), float(data.get('lon', -98.58)))
-            m.create()
-
-            output = subprocess.call([
-                './gifcreate.sh', 
-                data.get('nm1', ''), 
-                data.get('nm2', ''),
-                data.get('loc', ''),
-                str(data.get('id', 0))
-            ])
-
-            filename = "%s/%s.gif" % (WRITE_DIR, data.get('id', 0))
-            files = {'file': open(filename, 'rb')}
-
-            r = requests.post('http://upload.giphy.com/v1/gifs', data={
-                    'api_key': 'U0vOddn5W0Exy', 'username': 'crossing-us'
-                }, files=files)
-
-            # r = MockResponse("3oz8xVxJclwQixjhXW")            
-
-            if r.status_code == 200:
-                content = json.loads(r.content)
-                url = make_giphy_url(content['data']['id'])
-                giphy_id = os.path.basename(url)
-
-                cur.execute(
-                    """
-                    INSERT INTO """ + TABLE_NAME + """
-                    VALUES (%s, %s);
-                    """, [data.get('id'), giphy_id]
-                )
-                conn.commit()
-
-                cur.close()
-                conn.close()
-
-                os.remove(filename)
-
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps({'giphy_id': giphy_id}),
-                    'headers':{}
-                }
-
-            else:
-                cur.close()
-                conn.close()
-
-                r.raise_for_status()
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'No Gif Matches that ID'}),
+                'headers':{}
+            }
     else:
         cur.close()
         conn.close()
 
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'Gif Request missing ID'}),
+            'headers':{}
+        }
+        
 
 def make_giphy_url(giphy_id):
     return "https://giphy.com/gifs/%s" % giphy_id

@@ -5,11 +5,6 @@ provider:
   region: us-east-1
   iamRoleARN: arn:aws:iam::069571769196:role/intersections-dev-IamRoleLambda-1MAAQQH68Y4YK
   cfLogs: true
-  vpc:
-      securityGroupIds:
-        - sg-86ee31fb
-      subnetIds: 
-        - subnet-06f9595d
 
 package:
   exclude:
@@ -29,11 +24,32 @@ package:
     - .DS_Store
 
 functions:
-  gifFromIntersection:
-    handler: handler.gifFromIntersection 
-    timeout: 300
+  makeIntersectionGif:
+    handler: handler.makeIntersectionGif
+    timeout: 60
+    events:
+      - http:
+          path: gif/make
+          method: get
+    memorySize: 1536
+    vpc:
+       securityGroupIds:
+         - sg-86ee31fb
+       subnetIds: 
+         - subnet-06f9595d
+  getIntersectionGif:
+    handler: handler.getIntersectionGif
+    timeout: 2
     events:
       - http:
           path: gif/get
           method: get
-    memorySize: 1536
+    memorySize: 128
+    vpc:
+      securityGroupIds:
+        - sg-fc209b86
+      subnetIds: 
+      - subnet-97c024ab
+      - subnet-09c61340
+      - subnet-9bb1abb1
+      - subnet-31c7dc69
