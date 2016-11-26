@@ -70,7 +70,7 @@ class Map(object):
         return int(x), int(y)
 
     def create(self, filename='/tmp/map.png'):
-        tiles_x = int(math.ceil(self.width / self.tile_width)) + 2
+        tiles_x = int(math.ceil(self.width / self.tile_width)) + 3
         tiles_y = int(math.ceil(self.height / self.tile_height)) + 3
 
         x_row = range(-int(math.floor(tiles_x/2)),int(math.ceil(tiles_x/2)))

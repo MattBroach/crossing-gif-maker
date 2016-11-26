@@ -73,8 +73,13 @@ def makeIntersectionGif(event, context):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'giphy_id': giphy_id}),
-            'headers':{}
+            'body': json.dumps({'giphy_id': resp[0]}),
+            'headers':{
+                'X-Requested-With': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,OPTIONS',
+            }
         }
 
     else:
@@ -114,7 +119,7 @@ def getIntersectionGif(event, context):
                     'X-Requested-With': '*',
                     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
                     'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
+                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
                 }
             }
 
@@ -123,7 +128,12 @@ def getIntersectionGif(event, context):
             return {
                 'statusCode': 400,
                 'body': json.dumps({'error': 'No Gif Matches that ID'}),
-                'headers':{}
+                'headers':{
+                    'X-Requested-With': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+                }
             }
     else:
         cur.close()
@@ -132,7 +142,12 @@ def getIntersectionGif(event, context):
         return {
             'statusCode': 400,
             'body': json.dumps({'error': 'Gif Request missing ID'}),
-            'headers':{}
+            'headers':{
+                'X-Requested-With': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,OPTIONS',
+            }
         }
         
 
