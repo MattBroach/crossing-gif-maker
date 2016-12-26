@@ -52,47 +52,43 @@ for i in {0..71}; do
     elif [ $i -lt 58 ]; then
         case $i in
             49)
-                composite_with_offset "-172" 613 494 494 $i
+                composite_with_offset "-172" 613 500 500 $i
                 ;;
             50)
-                composite_with_offset "-110" 554 494 494 $i
+                composite_with_offset "-110" 554 500 500 $i
                 ;;
             51)
-                composite_with_offset "-62" 502 494 494 $i
+                composite_with_offset "-62" 502 500 500 $i
                 ;;
             52)
-                composite_with_offset "-26" 466 494 482 $i
+                composite_with_offset "-26" 466 497 497 $i
                 ;;
             53)
-                composite_with_offset "+0" 440 475 458 $i
+                composite_with_offset "+0" 440 447 425 $i
                 ;;
             54)
-                composite_with_offset "+15" 425 461 444 $i
+                composite_with_offset "+15" 425 415 393 $i
                 ;;
             55)
-                composite_with_offset "+20" 420 451 434 $i
+                composite_with_offset "+20" 420 392 370 $i
                 ;;
             56)
-                composite_with_offset "+20" 420 447 430 $i
+                composite_with_offset "+20" 420 379 357 $i
                 ;;
             57)
-                composite_with_offset "+20" 420 445 428 $i
+                composite_with_offset "+20" 420 375 353 $i
                 ;;
         esac
     # After animation is done, repeate last frame for hold
     else
-        OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_57.png
+        cp $OUTPUT_FOLDER/COMBINED_57.png $OUTPUT_FOLDER/COMBINED_$i.png
     fi
 
-    GIF_PARAMS+=("-page")
-    GIF_PARAMS+=("0")
-    GIF_PARAMS+=($OUTPUT_FILE)
 done
 
 # CREATE GIF
 echo "Making Gif"
-convert -delay 83x1000 -size 640x480 "${GIF_PARAMS[@]/#/}" -loop 0 $BASE_FOLDER/temp.gif
-convert $BASE_FOLDER/temp.gif +dither -layers Optimize -colors 32 $BASE_FOLDER/$ID.gif
+$DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
 
 # CLEAN UP TEMP FILES
 echo "Cleaning"
@@ -100,5 +96,4 @@ rm $BASE_FOLDER/first_name.png
 rm $BASE_FOLDER/second_name.png
 rm $BASE_FOLDER/location.png
 rm $OUTPUT_FOLDER/*.png
-rm $BASE_FOLDER/temp.gif
 rm $BASE_FOLDER/map.png

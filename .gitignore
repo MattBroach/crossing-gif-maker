@@ -28,6 +28,7 @@ setup.sh
 map.png
 output/
 *.gif
+*.mp4
 
 # Testing Files #
 #################

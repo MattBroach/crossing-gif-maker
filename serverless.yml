@@ -3,8 +3,19 @@ provider:
   name: aws
   runtime: python2.7
   region: us-east-1
-  iamRoleARN: arn:aws:iam::069571769196:role/intersections-dev-IamRoleLambda-6LZDD3Q658I2
   cfLogs: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+         - "s3:ListBucket"
+         - "s3:PutObject"
+         - "logs:CreateLogGroup"
+         - "logs:CreateLogStream"
+         - "logs:PutLogEvents"
+         - "ec2:CreateNetworkInterface"
+         - "ec2:DescribeNetworkInterfaces"
+         - "ec2:DeleteNetworkInterface"
+      Resource: "*"
 
 package:
   exclude:

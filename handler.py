@@ -5,8 +5,10 @@ import subprocess
 import requests
 import json
 import os
+import boto3
 
 from map import Map
+from container import make_container
 
 
 # DATABASE_SETTINGS = {
@@ -25,10 +27,15 @@ DATABASE_SETTINGS = {
     
 TABLE_NAME = 'giphy'
 
-WRITE_DIR='/tmp'
+WRITE_DIR = '/tmp'
+
+GIPHY_API_KEY = 'U0vOddn5W0Exy'
+GIPHY_USER =  'crossing-us'
+
 
 def makeIntersectionGif(event, context):
     data = event.get('queryStringParameters', {})
+    oid = data.get('oid', 0)
 
     m = Map(float(data.get('lat', 39.82)), float(data.get('lon', -98.58)))
     m.create()
@@ -38,14 +45,14 @@ def makeIntersectionGif(event, context):
         data.get('nm1', ''), 
         data.get('nm2', ''),
         data.get('loc', ''),
-        str(data.get('id', 0))
+        oid
     ])
 
-    filename = "%s/%s.gif" % (WRITE_DIR, data.get('id', 0))
+    filename = "%s/%s.mp4" % (WRITE_DIR, oid)
     files = {'file': open(filename, 'rb')}
 
     r = requests.post('http://upload.giphy.com/v1/gifs', data={
-            'api_key': 'U0vOddn5W0Exy', 'username': 'crossing-us'
+            'api_key': GIPHY_API_KEY, 'username': GIPHY_USER
         }, files=files)
 
     # r = MockResponse("3oz8xVxJclwQixjhXW")            
@@ -62,25 +69,21 @@ def makeIntersectionGif(event, context):
             """
             INSERT INTO """ + TABLE_NAME + """
             VALUES (%s, %s);
-            """, [data.get('id'), giphy_id]
+            """, [oid, giphy_id]
         )
         conn.commit()
 
         cur.close()
         conn.close()
 
+        # Upload Video and container to S3
+        s3 = boto3.resource('s3')
+        s3.Object('container.crossing.us', '{}.html'.format(oid)).put(Body=make_container(oid), ContentType='text/html')
+        s3.Object('video.crossing.us', '{}.mp4'.format(oid)).put(Body=open(filename, 'rb'), ContentType='video/mp4')
+
         os.remove(filename)
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'giphy_id': resp[0]}),
-            'headers':{
-                'X-Requested-With': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET,OPTIONS',
-            }
-        }
+        return format_response(200, {'giphy_id': content['data']['id']})
 
     else:
         cur.close()
@@ -96,12 +99,12 @@ def getIntersectionGif(event, context):
     cur = conn.cursor()
 
     # Check if the intersection ID already has a GIF associated with it
-    if data.get('id', None) is not None:
+    if data.get('oid', None) is not None:
         cur.execute("""
             SELECT giphy_id
             FROM """ + TABLE_NAME + """
-            WHERE id = %s;
-            """, [data.get('id', None)]
+            WHERE oid = %s;
+            """, [data.get('oid', None)]
         )
         resp = cur.fetchone()
 
@@ -110,45 +113,16 @@ def getIntersectionGif(event, context):
             cur.close()
             conn.close()
 
-            print(resp)
-
-            return {
-                'statusCode': 200,
-                'body': json.dumps({'giphy_id': resp[0]}),
-                'headers':{
-                    'X-Requested-With': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
-                }
-            }
+            return format_response(200, {'giphy_id': resp[0]})
 
         # Otherwise, return an error
         else:
-            return {
-                'statusCode': 400,
-                'body': json.dumps({'error': 'No Gif Matches that ID'}),
-                'headers':{
-                    'X-Requested-With': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET,OPTIONS',
-                }
-            }
+            return format_response(400, {'error': 'No Gif Matches that ID'})
     else:
         cur.close()
         conn.close()
 
-        return {
-            'statusCode': 400,
-            'body': json.dumps({'error': 'Gif Request missing ID'}),
-            'headers':{
-                'X-Requested-With': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET,OPTIONS',
-            }
-        }
+        return format_response(400, {'error': 'Gif Request missing ID'})
         
 
 def make_giphy_url(giphy_id):
@@ -159,4 +133,17 @@ class MockResponse():
     def __init__(self, giphy_id):
         self.content = '{"data":{"id":"%s"},"meta":{"status":200,"msg":"OK","response_id":"581823111c42f34bfe0790d4"}}' % giphy_id
         self.status_code = 200
+
+
+def format_response(status, data):
+    return {
+        'statusCode': status,
+        'body': json.dumps(data),
+        'headers': {
+            'X-Requested-With': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,OPTIONS',
+        }
+    }
         

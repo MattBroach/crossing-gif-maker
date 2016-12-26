@@ -71,10 +71,10 @@ class Map(object):
 
     def create(self, filename='/tmp/map.png'):
         tiles_x = int(math.ceil(self.width / self.tile_width)) + 3
-        tiles_y = int(math.ceil(self.height / self.tile_height)) + 3
+        tiles_y = int(math.ceil(self.height / self.tile_height)) + 2
 
-        x_row = range(-int(math.floor(tiles_x/2)),int(math.ceil(tiles_x/2)))
-        y_row = range(-int(math.floor(tiles_y/2)),int(math.ceil(tiles_y/2)))
+        x_row = range(-int(math.floor(tiles_x/2)),int(math.ceil(tiles_x/2))+1)
+        y_row = range(-int(math.floor(tiles_y/2)),int(math.ceil(tiles_y/2))+1)
 
         x_offset, y_offset = tileXY(self.lat, self.lon, self.zoom)
         x_absolute, y_absolute = latlon2xy(self.lat, self.lon, self.zoom)
