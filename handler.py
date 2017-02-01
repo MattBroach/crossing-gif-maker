@@ -35,7 +35,7 @@ GIPHY_USER =  'crossing-us'
 
 def makeIntersectionGif(event, context):
     data = event.get('queryStringParameters', {})
-    oid = data.get('oid', 0)
+    id = data.get('id', 0)
 
     m = Map(float(data.get('lat', 39.82)), float(data.get('lon', -98.58)))
     m.create()
@@ -45,10 +45,10 @@ def makeIntersectionGif(event, context):
         data.get('nm1', ''), 
         data.get('nm2', ''),
         data.get('loc', ''),
-        oid
+        id
     ])
 
-    filename = "%s/%s.mp4" % (WRITE_DIR, oid)
+    filename = "%s/%s.mp4" % (WRITE_DIR, id)
     files = {'file': open(filename, 'rb')}
 
     r = requests.post('http://upload.giphy.com/v1/gifs', data={
@@ -69,7 +69,7 @@ def makeIntersectionGif(event, context):
             """
             INSERT INTO """ + TABLE_NAME + """
             VALUES (%s, %s);
-            """, [oid, giphy_id]
+            """, [id, giphy_id]
         )
         conn.commit()
 
@@ -78,8 +78,8 @@ def makeIntersectionGif(event, context):
 
         # Upload Video and container to S3
         s3 = boto3.resource('s3')
-        s3.Object('container.crossing.us', '{}.html'.format(oid)).put(Body=make_container(oid), ContentType='text/html')
-        s3.Object('video.crossing.us', '{}.mp4'.format(oid)).put(Body=open(filename, 'rb'), ContentType='video/mp4')
+        s3.Object('container.crossing.us', '{}.html'.format(id)).put(Body=make_container(id), ContentType='text/html')
+        s3.Object('video.crossing.us', '{}.mp4'.format(id)).put(Body=open(filename, 'rb'), ContentType='video/mp4')
 
         os.remove(filename)
 
@@ -99,12 +99,12 @@ def getIntersectionGif(event, context):
     cur = conn.cursor()
 
     # Check if the intersection ID already has a GIF associated with it
-    if data.get('oid', None) is not None:
+    if data.get('id', None) is not None:
         cur.execute("""
             SELECT giphy_id
             FROM """ + TABLE_NAME + """
-            WHERE oid = %s;
-            """, [data.get('oid', None)]
+            WHERE id = %s;
+            """, [data.get('id', None)]
         )
         resp = cur.fetchone()
 
