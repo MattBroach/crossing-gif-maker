@@ -4,20 +4,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BASE_FOLDER=/tmp
 OUTPUT_FOLDER=$BASE_FOLDER/output
 SOURCE_FOLDER=$DIR/PNG
-MAP_IMAGE=$BASE_FOLDER/map.png
 
 FIRST_NAME=$1
 SECOND_NAME=$2
 LOCATION=$3
 ID=$4
 ATTRIBUTION="Map data © OpenStreetMap (CC BY-SA)"
+MAP_IMAGE=$BASE_FOLDER/map_$ID.png
 
 # CREATE INITIAL TEXT
 echo "Creating Text Overlays"
 
-convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$FIRST_NAME" $BASE_FOLDER/first_name.png
-convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$SECOND_NAME" $BASE_FOLDER/second_name.png
-convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center caption:"$LOCATION" $BASE_FOLDER/location.png
+convert -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$FIRST_NAME" $BASE_FOLDER/first_name_$ID.png
+convert  -background '#0e8044' -fill white -font Helvetica -size 200x40 -gravity Center caption:"$SECOND_NAME" $BASE_FOLDER/second_name_$ID.png
+convert -background '#0e8044' -fill white -font Helvetica -size 500x30 -gravity Center caption:"$LOCATION" $BASE_FOLDER/location_$ID.png
 
 mkdir -p $OUTPUT_FOLDER
 
@@ -29,10 +29,10 @@ composite_with_offset () {
     INDEX=$5
 
     SOURCE_FILE=$SOURCE_FOLDER/Gif_$(printf %02d $INDEX).png
-    OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $INDEX).png
+    OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $INDEX)_$ID.png
 
-    convert -page 0 $MAP_IMAGE -page 0 $SOURCE_FILE -page $FIRST_OFFSET+33 $BASE_FOLDER/first_name.png \
-            -page +$SECOND_OFFSET+33 $BASE_FOLDER/second_name.png -page +70+$LOCATION_OFFSET $BASE_FOLDER/location.png \
+    convert -page 0 $MAP_IMAGE -page 0 $SOURCE_FILE -page $FIRST_OFFSET+33 $BASE_FOLDER/first_name_$ID.png \
+            -page +$SECOND_OFFSET+33 $BASE_FOLDER/second_name_$ID.png -page +70+$LOCATION_OFFSET $BASE_FOLDER/location_$ID.png \
             -fill black -pointsize 10 -annotate +435+$ATTRIBUTION_OFFSET "$ATTRIBUTION" \
             -layers flatten $OUTPUT_FILE
 }
@@ -43,7 +43,7 @@ echo "Compositing Intermediaries"
 GIF_PARAMS=()
 for i in {0..71}; do
     SOURCE_FILE=$SOURCE_FOLDER/Gif_$(printf %02d $i).png
-    OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $i).png
+    OUTPUT_FILE=$OUTPUT_FOLDER/COMBINED_$(printf %02d $i)_${ID}.png
 
     # Before text enters, we only need to combine the animation and the map
     if [ $i -lt 49 ]; then
@@ -81,19 +81,19 @@ for i in {0..71}; do
         esac
     # After animation is done, repeate last frame for hold
     else
-        cp $OUTPUT_FOLDER/COMBINED_57.png $OUTPUT_FOLDER/COMBINED_$i.png
+        cp $OUTPUT_FOLDER/COMBINED_57_${ID}.png $OUTPUT_FOLDER/COMBINED_${i}_$ID.png
     fi
 
 done
 
 # CREATE GIF
 echo "Making Gif"
-$DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
+$DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d_${ID}.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
 
 # CLEAN UP TEMP FILES
 echo "Cleaning"
-rm $BASE_FOLDER/first_name.png
-rm $BASE_FOLDER/second_name.png
-rm $BASE_FOLDER/location.png
-rm $OUTPUT_FOLDER/*.png
-rm $BASE_FOLDER/map.png
+rm $BASE_FOLDER/first_name_$ID.png
+rm $BASE_FOLDER/second_name_$ID.png
+rm $BASE_FOLDER/location_$ID.png
+rm $OUTPUT_FOLDER/*_$ID.png
+rm $BASE_FOLDER/map_$ID.png
