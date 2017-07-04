@@ -91,12 +91,8 @@ done
 
 # CREATE GIF
 echo "Making Gif"
-<<<<<<< HEAD
-$DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
 convert -delay 83x1000 -size 480x320 "${GIF_PARAMS[@]/#/}" -loop 0 -fuzz 2% -layers Optimize $BASE_FOLDER/$ID.gif
-=======
 $DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d_${ID}.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
->>>>>>> b6dbe1492d66ce67f928437698ea30875364bf91
 
 # CLEAN UP TEMP FILES
 echo "Cleaning"
