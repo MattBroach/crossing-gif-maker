@@ -84,11 +84,15 @@ for i in {0..71}; do
         cp $OUTPUT_FOLDER/COMBINED_57.png $OUTPUT_FOLDER/COMBINED_$i.png
     fi
 
+    GIF_PARAMS+=("-page")
+    GIF_PARAMS+=("0")
+    GIF_PARAMS+=($OUTPUT_FILE)
 done
 
 # CREATE GIF
 echo "Making Gif"
 $DIR/ffmpeg -y -framerate 12 -i $OUTPUT_FOLDER/COMBINED_%02d.png -c:v libx264 -vf fps=12 -pix_fmt yuv420p $BASE_FOLDER/$ID.mp4
+convert -delay 83x1000 -size 480x320 "${GIF_PARAMS[@]/#/}" -loop 0 -fuzz 2% -layers Optimize $BASE_FOLDER/$ID.gif
 
 # CLEAN UP TEMP FILES
 echo "Cleaning"

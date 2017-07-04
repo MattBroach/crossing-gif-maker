@@ -1,7 +1,7 @@
 service: crossing-gif
 provider:
   name: aws
-  runtime: python2.7
+  runtime: python3.6
   region: us-east-1
   cfLogs: true
   iamRoleStatements:
@@ -22,10 +22,13 @@ package:
     - credentials.csv
     - fetch_test.py
     - test.py
+    - event.json
     - pg8000-1.10.6.dist-info/**
     - Pillow-3.4.2.dist-info/**
+    - Pillow-4.2.0.dist-info/**
     - six-1.10.0.dist-info/**
     - requests-2.11.1.dist-info/**
+    - olefile-0.44.egg-info
     - setup.sh
     - ubuntu-xenial-16.04-cloudimg-console
     - Vagrantfile

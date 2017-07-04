@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import pg8000
 import subprocess
 import requests
@@ -26,6 +24,7 @@ DATABASE_SETTINGS = {
 }
     
 TABLE_NAME = 'giphy'
+SECOND_TABLE = 'completed'
 
 WRITE_DIR = '/tmp'
 
@@ -48,80 +47,62 @@ def makeIntersectionGif(event, context):
         id
     ])
 
-    filename = "%s/%s.mp4" % (WRITE_DIR, id)
+    filename = "{}/{}.mp4".format(WRITE_DIR, id)
+    gifname = "{}/{}.gif".format(WRITE_DIR, id)
     files = {'file': open(filename, 'rb')}
 
-    r = requests.post('http://upload.giphy.com/v1/gifs', data={
-            'api_key': GIPHY_API_KEY, 'username': GIPHY_USER
-        }, files=files)
+    # Upload Video and container to S3
+    s3 = boto3.resource('s3')
+    s3.Object('container.crossing.us', '{}.html'.format(id)).put(Body=make_container(id), ContentType='text/html')
+    s3.Object('video.crossing.us', '{}.mp4'.format(id)).put(Body=open(filename, 'rb'), ContentType='video/mp4')
+    s3.Object('gif.crossing.us', '{}.gif'.format(id)).put(Body=open(gifname, 'rb'), ContentType='image/gif')
 
-    # r = MockResponse("3oz8xVxJclwQixjhXW")            
+    conn = pg8000.connect(**DATABASE_SETTINGS)
+    cur = conn.cursor()
 
-    if r.status_code == 200:
-        content = json.loads(r.content)
-        url = make_giphy_url(content['data']['id'])
-        giphy_id = os.path.basename(url)
+    cur.execute(
+        """
+        INSERT INTO """ + SECOND_TABLE + """ 
+        VALUES (%s);
+        """, [id]
+    )
+    conn.commit()
 
-        conn = pg8000.connect(**DATABASE_SETTINGS)
-        cur = conn.cursor()
+    cur.close()
+    conn.close()
 
-        cur.execute(
-            """
-            INSERT INTO """ + TABLE_NAME + """
-            VALUES (%s, %s);
-            """, [id, giphy_id]
-        )
-        conn.commit()
+    os.remove(filename)
+    os.remove(gifname)
 
-        cur.close()
-        conn.close()
-
-        # Upload Video and container to S3
-        s3 = boto3.resource('s3')
-        s3.Object('container.crossing.us', '{}.html'.format(id)).put(Body=make_container(id), ContentType='text/html')
-        s3.Object('video.crossing.us', '{}.mp4'.format(id)).put(Body=open(filename, 'rb'), ContentType='video/mp4')
-
-        os.remove(filename)
-
-        return format_response(200, {'giphy_id': content['data']['id']})
-
-    else:
-        cur.close()
-        conn.close()
-
-        r.raise_for_status()
+    return format_response(200, {})
 
 
 def getIntersectionGif(event, context):
     data = event.get('queryStringParameters', {})
 
-    conn = pg8000.connect(**DATABASE_SETTINGS)
-    cur = conn.cursor()
-
     # Check if the intersection ID already has a GIF associated with it
     if data.get('id', None) is not None:
+        conn = pg8000.connect(**DATABASE_SETTINGS)
+        cur = conn.cursor()
+
         cur.execute("""
-            SELECT giphy_id
-            FROM """ + TABLE_NAME + """
+            SELECT *
+            FROM """ + SECOND_TABLE + """
             WHERE id = %s;
             """, [data.get('id', None)]
         )
         resp = cur.fetchone()
+        cur.close()
+        conn.close()
 
         # If the gif already exists, just return the URL
         if resp:
-            cur.close()
-            conn.close()
-
-            return format_response(200, {'giphy_id': resp[0]})
+            return format_response(200, {})
 
         # Otherwise, return an error
         else:
             return format_response(400, {'error': 'No Gif Matches that ID'})
     else:
-        cur.close()
-        conn.close()
-
         return format_response(400, {'error': 'Gif Request missing ID'})
         
 
@@ -146,4 +127,3 @@ def format_response(status, data):
             'Access-Control-Allow-Methods': 'GET,OPTIONS',
         }
     }
-        

@@ -42,11 +42,14 @@ credentials.csv
 # Local Pip package installs #
 ##############################
 *.dist-info
+*.egg-info
 PIL/
 six/
 pg8000/
 six.py
 requests/
+OleFileIO_PL.py
+olefile/
 
 # Serverless files #
 ####################
